@@ -1,10 +1,8 @@
-
-// Sorry,  i did not finish this yesterday, I will commit now, and than start fresh over tonight to do it again..
-
-
 const express = require("express");
 const logger = require("morgan");
+
 const mongoose = require("mongoose");
+const Recipe = require("./models/Recipe.model");
 const app = express();
 
 // MIDDLEWARE
@@ -15,8 +13,6 @@ app.use(express.json());
 
 // Iteration 1 - Connect to MongoDB
 // DATABASE CONNECTION
-
-
 const MONGODB_URI = "mongodb://127.0.0.1:27017/express-mongoose-recipes-dev";
 
 mongoose
@@ -25,35 +21,14 @@ mongoose
     .catch((err) => console.error("Error connecting to mongo", err));
 
 
-
-
-
 // ROUTES
-//  GET  / route - This is just an example route
-app.get('/', (req, res) => {
-    res.send("<h1>LAB | Express Mongoose Recipes</h1>");
+@@ -21, 24 + 24, 65 @@app.get('/', (req, res) => {
 });
 
 
 //  Iteration 3 - Create a Recipe route
 //  POST  /recipes route
-app.post('/recipes', (req, res) => {
 
-    Recipe.create({
-        title: req.body.title,
-        level: req.body.level,
-        ingredients: req.body.ingredients,
-        cuisine: req.body.cuisine,
-        dishtype: req.body.dishType,
-        image: req.body.image,
-        duration: req.body.duration,
-        creator: req.body.creator
-    })
-
-
-}
-
-)
 
 //  Iteration 4 - Get All Recipes
 //  GET  /recipes route
@@ -69,25 +44,62 @@ app.post('/recipes', (req, res) => {
 
 //  Iteration 7 - Delete a Single Recipe
 //  DELETE  /recipes/:id route
+app.post("/recipes", (request, response) => {
+    Recipe.create({
+        title: request.body.title,
+        level: request.body.level,
+        ingredients: request.body.ingredients,
+        cuisine: request.body.cuisine,
+        dishType: request.body.dishType,
+        image: request.body.image,
+        duration: request.body.duration,
+        creator: request.body.creator
+    })
+        .then((createdRecipe) => {
+            response.status(201).json(createdRecipe)
+        })
+        .catch((error) => {
+            response.status(500).json({ message: "Error while creating a new recipe" });
+        })
+})
 
 
-// BONUS
-//  Bonus: Iteration 9 - Create a Single User
-//  POST  /users route
+app.get("/recipes", (request, response) => {
+    Recipe.find()
+        .then((allRecipes) => {
+            response.status(200).json(allRecipes);
+        })
+        .catch((error) => {
+            response.status(500).json({ message: "Error While getting all recipes" });
+        })
+})
 
+app.get("/recipes/:id", (request, response) => {
+    Recipe.findById(request.params.id)
+        .then((recipe) => {
+            response.status(200).json(recipe)
+        })
+        .catch((error) => {
+            response.status(500).json({ message: "Error While getting a single recipe" });
+        })
+})
 
-//  Bonus: Iteration 10 | Get a Single User
-//  GET /users/:id route
+app.put("/recipes/:id", (request, response) => {
+    Recipe.findByIdAndUpdate(request.params.id, request.body, { new: true })
+        .then((updatedRecipe) => {
+            response.status(200).json(updatedRecipe)
+        })
+        .catch((error) => {
+            response.status(500).json({ message: "Error While updating the recipe" });
+        })
+})
 
-
-//  Bonus: Iteration 11 | Update a Single User
-//  GET /users/:id route
-
-
-// Start the server
-app.listen(3000, () => console.log('My first app listening on port 3000!'));
-
-
-
-//❗️DO NOT REMOVE THE BELOW CODE
-module.exports = app;
+app.delete("/recipes/:id", (request, response) => {
+    Recipe.findByIdAndDelete(request.params.id)
+        .then(() => {
+            response.status(204).send();
+        })
+        .catch((error) => {
+            response.status(500).json({ message: "Error While deleting the recipe" });
+        })
+})
